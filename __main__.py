@@ -66,7 +66,7 @@ def get_all_job_postings(driver, job_keyword: str, location: str,
 
     # Get the number of job results, to go page by page
     p = driver.find_element(by=By.CLASS_NAME, value='jobsearch-JobCountAndSortPane-jobCount').text
-    max_iter_pgs = int(p.split(' ')[0].replace('+', '').replace(',', '')) // 15
+    max_iter_pgs = (int(p.split(' ')[0].replace('+', '').replace(',', '')) // 15) + 1
 
     if jobs_dict is None: jobs_dict = {}
 
@@ -171,6 +171,8 @@ def filter_print(job_names: list[str]):
     basic_save_file = './data/bare_{}_data.json'
     pay_not_provided = []
     for i in range(len(job_names)):
+        print(basic_save_file.format(job_names[i].replace('+', '_').lower()))
+        print(f'\n\n\n{job_names[i].replace("+", " ")} ----------------------------------------')
         with open(basic_save_file.format(job_names[i].replace('+', '_').lower())) as f:
             jobs_dict = ujs.load(f)
             job_id_keys = list(jobs_dict[job_names[i]].keys())
@@ -204,20 +206,21 @@ def filter_print(job_names: list[str]):
 def main(command: str):
     # The job searches to make
     job_keywords = [
-        'IT',
-        'software+developer',
+        'junior+python+developer',
         'python+developer',
-        'it+technical+support',
         'Python',
+        'software+developer',
         'software+engineer',
         'IT+Helpdesk',
         'Help+Desk+Technician',
         'Tier+1+Technical+Support',
+        'it+technical+support',
         'technical+support',
-        'Tier+1+Support'
+        'Tier+1+Support',
+        'IT'
     ]
     # Locations to search, there is actually no functionality to use multiple locations yet however, but still
-    # making it a list so I remember to add it later
+    # making it a list, so I remember to add it later
     location_keywords = ['Remote']
     basic_save_file = './data/bare_{}_data.json'
 
@@ -235,7 +238,8 @@ def main(command: str):
             # For each job, open the file and get the previous search results, or create the file and save an empty dict
             try:
                 with open(basic_save_file.format(job_keywords[i].replace('+', '_').lower())) as f:
-                    jobs_dict = ujs.load(f)
+                    jobs_dict = ujs.load(f)[job_keywords[i]]
+
             except FileNotFoundError:
                 with open(basic_save_file.format(job_keywords[i].replace('+', '_').lower()), 'x') as f:
                     ujs.dump({}, f)
@@ -247,7 +251,7 @@ def main(command: str):
                 job_keyword=job_keywords[i],
                 location=location_keywords[0],
                 jobs_dict=jobs_dict,
-                max_age=7
+                max_age=3
             )
             with open(basic_save_file.format(job_keywords[i].replace('+', '_').lower()), 'w') as f:
                 ujs.dump({task_result_tuple[1]: task_result_tuple[0]}, f)
